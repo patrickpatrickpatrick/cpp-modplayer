@@ -1,0 +1,13 @@
+misc resources i have used
+
+https://stackoverflow.com/questions/24151121/how-to-play-wav-audio-byte-array-via-javascript-html5
+http://www.justgoscha.com/programming/2014/04/08/creating-dynamic-audiobuffers-with-webaudio.html
+http://blog.chrislowis.co.uk/2013/06/05/playing-notes-web-audio-api.html
+http://blog.chrislowis.co.uk/2013/06/10/playing-multiple-notes-web-audio-api.html
+https://sigusrone.com/articles/building-a-synth-with-the-web-audio-api-part-two
+https://modernweb.com/creating-sound-with-the-web-audio-api-and-oscillators/
+http://teropa.info/blog/2016/08/10/frequency-and-pitch.html
+https://www.keithmcmillen.com/blog/making-music-in-the-browser-web-audio-api-part-1/
+
+gonna need this for pitch shifting
+https://thebreakfastpost.com/2015/10/18/ffts-in-javascript/
