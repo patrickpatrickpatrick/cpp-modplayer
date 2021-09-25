@@ -50,7 +50,7 @@ struct file_index_and_length {
 
 class Base {
   public:
-    string getStringFromBytes(
+    string get_string_from_bytes(
       file_index_and_length x,
       vector<BYTE> fileData
     ) {
@@ -67,15 +67,18 @@ class Base {
 
 class Sample: public Base {
   file_index_and_length name, length, finetune, linear_volume, repeat_offset, repeat_length, sample_data;
+  vector<BYTE> fileData;
+
   public:
     Sample() {};
-    void setAll(
+    void set_all(
       file_index_and_length *a,
       file_index_and_length *b,
       file_index_and_length *c,
       file_index_and_length *d,
       file_index_and_length *e,
-      file_index_and_length *f
+      file_index_and_length *f,
+      vector<BYTE> x
     ) {
       name = *a;
       length = *b;
@@ -83,18 +86,26 @@ class Sample: public Base {
       linear_volume = *d;
       repeat_offset = *e;
       repeat_length = *f;
+      fileData = x;
     }
 
-    string getName(vector<BYTE> fileData) {
-      return getStringFromBytes(name, fileData);
+    string get_name() {
+      return get_string_from_bytes(name, fileData);
     }
 };
 
 class Modfile: public Base {
   file_index_and_length name, number_of_patterns, song_end_jump_pos, pattern_table, file_format_tag, pattern_data;
   Sample sample_bank[NUMBER_OF_SAMPLES];
+  vector<BYTE> fileData;
+
   public:
     Modfile(
+      vector<BYTE> a
+    ) {
+      fileData = a;
+    }
+    void set_file_attributes(
       file_index_and_length *a,
       file_index_and_length *b,
       file_index_and_length *c,
@@ -109,59 +120,63 @@ class Modfile: public Base {
       file_format_tag = *e;
       pattern_data = *f;
     }
-  void setSampleBank(vector<BYTE> fileData) {
-    int sampleLengths[6] = {
-      SAMPLE_NAME_LENGTH,
-      SAMPLE_SAMPLE_LENGTH_LENGTH,
-      SAMPLE_FINETUNE_LENGTH,
-      SAMPLE_VOLUME_LENGTH,
-      SAMPLE_REPEAT_OFFSET_LENGTH,
-      SAMPLE_REPEAT_LENGTH
-    };
+    void set_sample_bank() {
+      int sampleLengths[6] = {
+        SAMPLE_NAME_LENGTH,
+        SAMPLE_SAMPLE_LENGTH_LENGTH,
+        SAMPLE_FINETUNE_LENGTH,
+        SAMPLE_VOLUME_LENGTH,
+        SAMPLE_REPEAT_OFFSET_LENGTH,
+        SAMPLE_REPEAT_LENGTH
+      };
 
-    for (int i = 0; i < NUMBER_OF_SAMPLES; i++) {
-      file_index_and_length name, length, finetune, volume, repeat_offset, repeat_length;
-      file_index_and_length *name_p, *length_p, *finetune_p, *volume_p, *repeat_offset_p, *repeat_length_p;
+      for (int i = 0; i < NUMBER_OF_SAMPLES; i++) {
+        file_index_and_length name, length, finetune, volume, repeat_offset, repeat_length;
+        file_index_and_length *name_p, *length_p, *finetune_p, *volume_p, *repeat_offset_p, *repeat_length_p;
 
-      // name is of type file_index_and_length
-      // set name_p to point to address at name
-      name_p = &name;
+        // name is of type file_index_and_length
+        // set name_p to point to address at name
+        name_p = &name;
+        length_p = &length;
+        finetune_p = &finetune;
+        volume_p = &volume;
+        repeat_offset_p = &repeat_offset;
+        repeat_length_p = &repeat_length;
 
-      length_p = &length;
-      finetune_p = &finetune;
-      volume_p = &volume;
-      repeat_offset_p = &repeat_offset;
-      repeat_length_p = &repeat_length;
+        // -> in C++ is a function used to assign values to a pointer
+        name_p->index = (20 + (30 * i));
+        name_p->length = 22;
 
-      // -> in C++ is a function used to assign values to a pointer
-      name_p->index = (20 + (30 * i));
-      name_p->length = 22;
+        length_p->index = ((20 + (30 * i)) + accumulate(sampleLengths, sampleLengths + 1, 0));
+        length_p->length = 2;
 
-      length_p->index = ((20 + (30 * i)) + accumulate(sampleLengths, sampleLengths + 1, 0));
-      length_p->length = 2;
+        finetune_p->index = ((20 + (30 * i)) + accumulate(sampleLengths, sampleLengths + 2, 0));
+        finetune_p->length = 1;
 
-      finetune_p->index = ((20 + (30 * i)) + accumulate(sampleLengths, sampleLengths + 2, 0));
-      finetune_p->length = 1;
+        volume_p->index = ((20 + (30 * i)) + accumulate(sampleLengths, sampleLengths + 3, 0));
+        volume_p->length = 1;
 
-      volume_p->index = ((20 + (30 * i)) + accumulate(sampleLengths, sampleLengths + 3, 0));
-      volume_p->length = 1;
+        repeat_offset_p->index = ((30 + (30 * i)) + accumulate(sampleLengths, sampleLengths + 4, 0));
+        repeat_offset_p->length = 2;
 
-      repeat_offset_p->index = ((30 + (30 * i)) + accumulate(sampleLengths, sampleLengths + 4, 0));
-      repeat_offset_p->length = 2;
+        repeat_length_p->index = ((30 + (30 * i)) + accumulate(sampleLengths, sampleLengths + 5, 0));
+        repeat_length_p->length = 2;
 
-      repeat_length_p->index = ((30 + (30 * i)) + accumulate(sampleLengths, sampleLengths + 5, 0));
-      repeat_length_p->length = 2;
-
-      sample_bank[i].setAll(
-        name_p,
-        length_p,
-        finetune_p,
-        volume_p,
-        repeat_offset_p,
-        repeat_length_p
-      );
+        sample_bank[i].set_all(
+          name_p,
+          length_p,
+          finetune_p,
+          volume_p,
+          repeat_offset_p,
+          repeat_length_p,
+          fileData
+        );
+      }
     }
-  }
+    Sample get_sample_bank(int index) {
+      cout << "yy";
+      return sample_bank[index];
+    }
 };
 
 int main() {
@@ -170,13 +185,56 @@ int main() {
   cout << "I am reading the file... \n\n";
 
   vector<BYTE> fileData = readFile(aaa);
-  BYTE* fileName = &fileData[0];
+
+  Modfile the_file(fileData);
+
+  file_index_and_length name, number_of_patterns, song_end_jump_pos, pattern_table, file_format_tag, pattern_data;
+  file_index_and_length *name_p, *number_of_patterns_p, *song_end_jump_pos_p, *pattern_table_p, *file_format_tag_p, *pattern_data_p;
+
+  name_p = &name;
+  number_of_patterns_p = &number_of_patterns;
+  song_end_jump_pos_p = &song_end_jump_pos;
+  pattern_table_p = &pattern_table;
+  file_format_tag_p = &file_format_tag;
+  pattern_data_p = &pattern_data;
+
+  name_p->index = 0;
+  name_p->length = 20;
+
+  number_of_patterns_p->index = (NUMBER_OF_SAMPLES * SAMPLE_LENGTH) + 20;
+  number_of_patterns_p->length = 1;
+
+  song_end_jump_pos_p->index = (NUMBER_OF_SAMPLES * SAMPLE_LENGTH) + 20 + 1;
+  song_end_jump_pos_p->length = 1;
+
+  pattern_table_p->index = (NUMBER_OF_SAMPLES * SAMPLE_LENGTH) + 20 + 1 + 1;
+  pattern_table_p->length = 128;
+
+  file_format_tag_p->index = (NUMBER_OF_SAMPLES * SAMPLE_LENGTH) + 20 + 1 + 1 + 128;
+  file_format_tag_p->length = 4;
+
+  the_file.set_file_attributes(
+    name_p,
+    number_of_patterns_p,
+    song_end_jump_pos_p,
+    pattern_table_p,
+    file_format_tag_p,
+    pattern_data_p
+  );
+
+  // BYTE* fileName = &fileData[0];
 
   cout << "File has been read. Beginning to load variables.\n\n";
 
-  Sample sample_bank[32];
+  Sample sample_bank_example = the_file.get_sample_bank(0);
 
-  cout << sample_bank[1].getName(fileData);
+  cout << "NAH";
+
+  // cout << sample_bank_example.get_name();
+
+  // Sample sample_bank[32];
+
+  // cout << sample_bank[1].get_name(fileData);
 
   return 0;
 }
