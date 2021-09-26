@@ -95,7 +95,7 @@ class Sample: public Base {
 };
 
 class Modfile: public Base {
-  file_index_and_length name, number_of_patterns, song_end_jump_pos, pattern_table, file_format_tag, pattern_data;
+  file_index_and_length file_name, number_of_patterns, song_end_jump_pos, pattern_table, file_format_tag, pattern_data;
   Sample sample_bank[NUMBER_OF_SAMPLES];
   vector<BYTE> fileData;
 
@@ -113,12 +113,13 @@ class Modfile: public Base {
       file_index_and_length *e,
       file_index_and_length *f
     ) {
-      name = *a;
+      file_name = *a;
       number_of_patterns = *b;
       song_end_jump_pos = *c;
       pattern_table = *d;
       file_format_tag = *e;
       pattern_data = *f;
+      set_sample_bank();
     }
     void set_sample_bank() {
       int sampleLengths[6] = {
@@ -174,7 +175,6 @@ class Modfile: public Base {
       }
     }
     Sample get_sample_bank(int index) {
-      cout << "yy";
       return sample_bank[index];
     }
 };
@@ -188,18 +188,18 @@ int main() {
 
   Modfile the_file(fileData);
 
-  file_index_and_length name, number_of_patterns, song_end_jump_pos, pattern_table, file_format_tag, pattern_data;
-  file_index_and_length *name_p, *number_of_patterns_p, *song_end_jump_pos_p, *pattern_table_p, *file_format_tag_p, *pattern_data_p;
+  file_index_and_length file_name, number_of_patterns, song_end_jump_pos, pattern_table, file_format_tag, pattern_data;
+  file_index_and_length *file_name_p, *number_of_patterns_p, *song_end_jump_pos_p, *pattern_table_p, *file_format_tag_p, *pattern_data_p;
 
-  name_p = &name;
+  file_name_p = &file_name;
   number_of_patterns_p = &number_of_patterns;
   song_end_jump_pos_p = &song_end_jump_pos;
   pattern_table_p = &pattern_table;
   file_format_tag_p = &file_format_tag;
   pattern_data_p = &pattern_data;
 
-  name_p->index = 0;
-  name_p->length = 20;
+  file_name_p->index = 0;
+  file_name_p->length = 20;
 
   number_of_patterns_p->index = (NUMBER_OF_SAMPLES * SAMPLE_LENGTH) + 20;
   number_of_patterns_p->length = 1;
@@ -214,7 +214,7 @@ int main() {
   file_format_tag_p->length = 4;
 
   the_file.set_file_attributes(
-    name_p,
+    file_name_p,
     number_of_patterns_p,
     song_end_jump_pos_p,
     pattern_table_p,
@@ -222,7 +222,6 @@ int main() {
     pattern_data_p
   );
 
-  // BYTE* fileName = &fileData[0];
 
   cout << "File has been read. Beginning to load variables.\n\n";
 
@@ -230,11 +229,7 @@ int main() {
 
   cout << "NAH";
 
-  // cout << sample_bank_example.get_name();
-
-  // Sample sample_bank[32];
-
-  // cout << sample_bank[1].get_name(fileData);
+  cout << sample_bank_example.get_name();
 
   return 0;
 }
