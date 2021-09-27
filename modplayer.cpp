@@ -48,12 +48,24 @@ struct file_index_and_length {
   int length;
 };
 
+
+// there are basic functions that
+// several classes need, not really sure
+// this is the best name?
 class Base {
   public:
-    string get_string_from_bytes(
-      file_index_and_length x,
-      vector<BYTE> fileData
-    ) {
+    vector<BYTE> fileData;
+    int get_integer_from_bytes(file_index_and_length z) {
+      // i worked this out last time...
+      // (all_instruments->length[0] << 8 | all_instruments->length[1]) * 2
+
+      // the length needs to be 2 otherwise this will not work
+      // BIG ENDIAN!!!!
+      // MSB is first
+      return ((fileData[z.index] << 8) | fileData[z.index + 1]);
+
+    }
+    string get_string_from_bytes(file_index_and_length x) {
       string string_name;
 
       BYTE* string_name_pointer = &fileData[x.index];
@@ -67,7 +79,6 @@ class Base {
 
 class Sample: public Base {
   file_index_and_length name, length, finetune, linear_volume, repeat_offset, repeat_length, sample_data;
-  vector<BYTE> fileData;
 
   public:
     Sample() {};
@@ -90,20 +101,58 @@ class Sample: public Base {
     }
 
     string get_name() {
-      return get_string_from_bytes(name, fileData);
+      return get_string_from_bytes(name);
+    }
+    int get_length() {
+      return get_integer_from_bytes(length);
     }
 };
 
 class Modfile: public Base {
   file_index_and_length file_name, number_of_patterns, song_end_jump_pos, pattern_table, file_format_tag, pattern_data;
   Sample sample_bank[NUMBER_OF_SAMPLES];
-  vector<BYTE> fileData;
+  int total_sample_length;
 
   public:
     Modfile(
       vector<BYTE> a
     ) {
       fileData = a;
+
+      file_index_and_length file_name, number_of_patterns, song_end_jump_pos, pattern_table, file_format_tag, pattern_data;
+      file_index_and_length *file_name_p, *number_of_patterns_p, *song_end_jump_pos_p, *pattern_table_p, *file_format_tag_p, *pattern_data_p;
+
+      file_name_p = &file_name;
+      number_of_patterns_p = &number_of_patterns;
+      song_end_jump_pos_p = &song_end_jump_pos;
+      pattern_table_p = &pattern_table;
+      file_format_tag_p = &file_format_tag;
+      pattern_data_p = &pattern_data;
+
+      file_name_p->index = 0;
+      file_name_p->length = 20;
+
+      number_of_patterns_p->index = (NUMBER_OF_SAMPLES * SAMPLE_LENGTH) + 20;
+      number_of_patterns_p->length = 1;
+
+      song_end_jump_pos_p->index = (NUMBER_OF_SAMPLES * SAMPLE_LENGTH) + 20 + 1;
+      song_end_jump_pos_p->length = 1;
+
+      pattern_table_p->index = (NUMBER_OF_SAMPLES * SAMPLE_LENGTH) + 20 + 1 + 1;
+      pattern_table_p->length = 128;
+
+      file_format_tag_p->index = (NUMBER_OF_SAMPLES * SAMPLE_LENGTH) + 20 + 1 + 1 + 128;
+      file_format_tag_p->length = 4;
+
+      set_file_attributes(
+        file_name_p,
+        number_of_patterns_p,
+        song_end_jump_pos_p,
+        pattern_table_p,
+        file_format_tag_p,
+        pattern_data_p
+      );
+      set_sample_bank();
     }
     void set_file_attributes(
       file_index_and_length *a,
@@ -119,7 +168,6 @@ class Modfile: public Base {
       pattern_table = *d;
       file_format_tag = *e;
       pattern_data = *f;
-      set_sample_bank();
     }
     void set_sample_bank() {
       int sampleLengths[6] = {
@@ -130,6 +178,8 @@ class Modfile: public Base {
         SAMPLE_REPEAT_OFFSET_LENGTH,
         SAMPLE_REPEAT_LENGTH
       };
+
+      int total_sample_length_acc = 0;
 
       for (int i = 0; i < NUMBER_OF_SAMPLES; i++) {
         file_index_and_length name, length, finetune, volume, repeat_offset, repeat_length;
@@ -172,7 +222,13 @@ class Modfile: public Base {
           repeat_length_p,
           fileData
         );
+
+        total_sample_length_acc = total_sample_length_acc + sample_bank[i].get_length();
       }
+      total_sample_length = total_sample_length_acc;
+    }
+    string get_name() {
+      return get_string_from_bytes(file_name);
     }
     Sample get_sample_bank(int index) {
       return sample_bank[index];
@@ -188,48 +244,15 @@ int main() {
 
   Modfile the_file(fileData);
 
-  file_index_and_length file_name, number_of_patterns, song_end_jump_pos, pattern_table, file_format_tag, pattern_data;
-  file_index_and_length *file_name_p, *number_of_patterns_p, *song_end_jump_pos_p, *pattern_table_p, *file_format_tag_p, *pattern_data_p;
-
-  file_name_p = &file_name;
-  number_of_patterns_p = &number_of_patterns;
-  song_end_jump_pos_p = &song_end_jump_pos;
-  pattern_table_p = &pattern_table;
-  file_format_tag_p = &file_format_tag;
-  pattern_data_p = &pattern_data;
-
-  file_name_p->index = 0;
-  file_name_p->length = 20;
-
-  number_of_patterns_p->index = (NUMBER_OF_SAMPLES * SAMPLE_LENGTH) + 20;
-  number_of_patterns_p->length = 1;
-
-  song_end_jump_pos_p->index = (NUMBER_OF_SAMPLES * SAMPLE_LENGTH) + 20 + 1;
-  song_end_jump_pos_p->length = 1;
-
-  pattern_table_p->index = (NUMBER_OF_SAMPLES * SAMPLE_LENGTH) + 20 + 1 + 1;
-  pattern_table_p->length = 128;
-
-  file_format_tag_p->index = (NUMBER_OF_SAMPLES * SAMPLE_LENGTH) + 20 + 1 + 1 + 128;
-  file_format_tag_p->length = 4;
-
-  the_file.set_file_attributes(
-    file_name_p,
-    number_of_patterns_p,
-    song_end_jump_pos_p,
-    pattern_table_p,
-    file_format_tag_p,
-    pattern_data_p
-  );
-
-
-  cout << "File has been read. Beginning to load variables.\n\n";
+  cout << "File has been read and loaded into object. Sample bank name test...\n";
 
   Sample sample_bank_example = the_file.get_sample_bank(0);
 
-  cout << "NAH";
-
   cout << sample_bank_example.get_name();
+
+  cout << "\nFollowed by the file name test...\n";
+
+  cout << the_file.get_name();
 
   return 0;
 }
