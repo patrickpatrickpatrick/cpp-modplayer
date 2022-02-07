@@ -104,7 +104,8 @@ class Sample: public Base {
       return get_string_from_bytes(name);
     }
     int get_length() {
-      return get_integer_from_bytes(length);
+      // idk why i need 2 multiply the data
+      return get_integer_from_bytes(length) * 2 ;
     }
 };
 
@@ -246,13 +247,19 @@ int main() {
 
   cout << "File has been read and loaded into object. Sample bank name test...\n";
 
-  Sample sample_bank_example = the_file.get_sample_bank(0);
+  Sample sample_bank_example = the_file.get_sample_bank(6);
 
   cout << sample_bank_example.get_name();
 
   cout << "\nFollowed by the file name test...\n";
 
   cout << the_file.get_name();
+
+  cout << "\nFollowed by the int test...\n";
+
+  cout << sample_bank_example.get_length();
+
+
 
   return 0;
 }
