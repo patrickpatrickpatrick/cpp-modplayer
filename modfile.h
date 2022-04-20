@@ -108,16 +108,16 @@ class Modfile: public Base {
       file_name_p->index = 0;
       file_name_p->length = fileLengths[0];
 
-      number_of_patterns_p->index = accumulate(fileLengths, fileLengths + 1, 0);
+      number_of_patterns_p->index = (number_of_samples * accumulate(sampleLengths, sampleLengths + 6, 0)) + accumulate(fileLengths, fileLengths + 1, 0);
       number_of_patterns_p->length = fileLengths[1];
 
-      song_end_jump_pos_p->index = accumulate(fileLengths, fileLengths + 2, 0);
+      song_end_jump_pos_p->index = (number_of_samples * accumulate(sampleLengths, sampleLengths + 6, 0)) + accumulate(fileLengths, fileLengths + 2, 0);
       song_end_jump_pos_p->length = fileLengths[2];
 
-      pattern_table_p->index = accumulate(fileLengths, fileLengths + 3, 0);
+      pattern_table_p->index = (number_of_samples * accumulate(sampleLengths, sampleLengths + 6, 0)) + accumulate(fileLengths, fileLengths + 3, 0);
       pattern_table_p->length = fileLengths[3];
 
-      file_format_tag_p->index = accumulate(fileLengths, fileLengths + 4, 0);
+      file_format_tag_p->index = (number_of_samples * accumulate(sampleLengths, sampleLengths + 6, 0)) + accumulate(fileLengths, fileLengths + 4, 0);
       file_format_tag_p->length = fileLengths[4];
 
       set_file_attributes(
@@ -128,7 +128,7 @@ class Modfile: public Base {
         file_format_tag_p,
         pattern_data_p
       );
-      set_sample_bank(sampleLengths, accumulate(fileLengths, fileLengths + 5, 0));
+      set_sample_bank(sampleLengths, fileLengths[0]);
     }
     void set_file_attributes(
       file_index_and_length *a,
@@ -157,6 +157,11 @@ class Modfile: public Base {
 
       int total_sample_length_acc = 0;
       int lengthOfSampleLengths = accumulate(sampleLengths, sampleLengths + 6, 0);
+
+      cout << "Hello\n";
+      cout << sample_bank.size();
+      cout << "\n";
+      printf ("%d\n", lengthOfFileLengths);
 
       for (int i = 0; i < sample_bank.size(); i++) {
         file_index_and_length name, length, finetune, volume, repeat_offset, repeat_length;
